@@ -1,12 +1,11 @@
-import 'package:filmes_dart/view_model.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:filmes_dart/view_model.dart';
 
 class MoviePage extends StatefulWidget {
   const MoviePage({super.key});
 
   @override
-  State createState() => _MoviePageState();
+  State<MoviePage> createState() => _MoviePageState();
 }
 
 class _MoviePageState extends State<MoviePage> {
@@ -23,29 +22,117 @@ class _MoviePageState extends State<MoviePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Filmes')),
-      body: Column(
-        children: [
-          TextField(
-            controller: controller,
-            decoration: const InputDecoration(hintText: 'Buscar filme'),
-            onSubmitted: _viewModel.search,
+      appBar: AppBar(
+        title: const Text('🎬 Filmes'),
+        centerTitle: true,
+      ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              /// 🔍 Busca + filtro
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: controller,
+                      onSubmitted: _viewModel.search,
+                      decoration: InputDecoration(
+                        hintText: 'Buscar filme...',
+                        prefixIcon: const Icon(Icons.search),
+                        filled: true,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+
+                  /// Dropdown ano
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey.shade400),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<int>(
+                        value: _viewModel.selectedYear,
+                        hint: const Text('Ano'),
+                        items: _viewModel.years
+                            .map(
+                              (year) => DropdownMenuItem(
+                            value: year,
+                            child: Text(year.toString()),
+                          ),
+                        )
+                            .toList(),
+                        onChanged: _viewModel.filterYear,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 16),
+
+              /// Loading
+              if (_viewModel.isLoading)
+                const Expanded(
+                  child: Center(child: CircularProgressIndicator()),
+                )
+
+              else if (_viewModel.error != null)
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      _viewModel.error!,
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  ),
+                )
+
+              /// Lista de filmes
+              else
+                Expanded(
+                  child: ListView.separated(
+                    itemCount: _viewModel.movies.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    itemBuilder: (_, i) {
+                      final movie = _viewModel.movies[i];
+
+                      return Card(
+                        elevation: 3,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.all(8),
+                          leading: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.network(
+                              movie.urlPoster,
+                              width: 60,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          title: Text(
+                            movie.title,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          subtitle: Text('Ano: ${movie.year}'),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+            ],
           ),
-          if (_viewModel.is_loading) const CircularProgressIndicator(),
-
-          if (_viewModel.error != null) Text(_viewModel.error!),
-
-          Expanded(
-            child: ListView.builder(
-              itemCount: _viewModel.movies.length,
-              itemBuilder: (_, i) {
-                final movie = _viewModel.movies[i];
-
-                return ListTile(leading: Image.network(movie.urlPoster, width: 50), title: Text(movie.title), subtitle: Text(movie.year.toString()));
-              },
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

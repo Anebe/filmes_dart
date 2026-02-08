@@ -7,21 +7,41 @@ class MovieViewModel extends ChangeNotifier {
   final MovieApi _api = MovieApi();
 
 
+  List<Movie> _movies = [];
   List<Movie> movies = [];
-  bool is_loading = false;
+  Set<int> years = {};
+  int? selectedYear;
+  bool isLoading = false;
   String? error;
 
-  Future<List<Movie>?> search(String title) async {
+  void search(String title) async {
     try {
-      is_loading = true;
+      isLoading = true;
       error = null;
       notifyListeners();
 
-      movies = await _api.getMovies(title);
+      _movies = await _api.getMovies(title);
     }catch (e) {
       error = 'Erro ao buscar filmes';
     }
-    is_loading = false;
+
+    movies = _movies;
+    years.clear();
+    years.addAll(_movies.map((m) => m.year));
+    years = (years.toList()..sort()).toSet();
+    isLoading = false;
+    selectedYear = null;
     notifyListeners();
+  }
+
+  void filterYear(int? year){
+    if (year != null){
+      movies = _movies
+          .where((m) => m.year == year)
+          .toList();
+      selectedYear = year;
+      notifyListeners();
+    }
+
   }
 }
