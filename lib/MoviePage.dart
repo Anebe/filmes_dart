@@ -22,10 +22,7 @@ class _MoviePageState extends State<MoviePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('🎬 Filmes'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('🎬 Filmes'), centerTitle: true),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -42,9 +39,7 @@ class _MoviePageState extends State<MoviePage> {
                         hintText: 'Buscar filme...',
                         prefixIcon: const Icon(Icons.search),
                         filled: true,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                     ),
                   ),
@@ -61,14 +56,7 @@ class _MoviePageState extends State<MoviePage> {
                       child: DropdownButton<int>(
                         value: _viewModel.selectedYear,
                         hint: const Text('Ano'),
-                        items: _viewModel.years
-                            .map(
-                              (year) => DropdownMenuItem(
-                            value: year,
-                            child: Text(year.toString()),
-                          ),
-                        )
-                            .toList(),
+                        items: _viewModel.years.map((year) => DropdownMenuItem(value: year, child: Text(year.toString()))).toList(),
                         onChanged: _viewModel.filterYear,
                       ),
                     ),
@@ -80,21 +68,13 @@ class _MoviePageState extends State<MoviePage> {
 
               /// Loading
               if (_viewModel.isLoading)
-                const Expanded(
-                  child: Center(child: CircularProgressIndicator()),
-                )
-
+                const Expanded(child: Center(child: CircularProgressIndicator()))
               else if (_viewModel.error != null)
                 Expanded(
                   child: Center(
-                    child: Text(
-                      _viewModel.error!,
-                      style: const TextStyle(color: Colors.red),
-                    ),
+                    child: Text(_viewModel.error!, style: const TextStyle(color: Colors.red)),
                   ),
                 )
-
-              /// Lista de filmes
               else
                 Expanded(
                   child: ListView.separated(
@@ -103,35 +83,74 @@ class _MoviePageState extends State<MoviePage> {
                     itemBuilder: (_, i) {
                       final movie = _viewModel.movies[i];
 
-                      return Card(
-                        elevation: 3,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.all(8),
-                          leading: ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: Image.network(
-                              movie.urlPoster,
-                              width: 60,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                          title: Text(
-                            movie.title,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          subtitle: Text('Ano: ${movie.year}'),
-                        ),
-                      );
+                      return MovieTile(movie.urlPoster, movie.title, movie.year);
                     },
                   ),
                 ),
+              Expanded(
+                child: GridView.builder(
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
+                  itemCount: _viewModel.movies.length,
+                  itemBuilder: (_, i) {
+                    return MovieCard(image: _viewModel.movies[i].urlPoster, title: _viewModel.movies[i].title);
+                  },
+                ),
+              ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class MovieTile extends StatelessWidget {
+  final String image;
+  final String title;
+  final int year;
+
+  const MovieTile(this.image, this.title, this.year, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: ListTile(
+        contentPadding: const EdgeInsets.all(8),
+        leading: ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: Image.network(image, width: 60, fit: BoxFit.cover),
+        ),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        subtitle: Text('Ano: $year'),
+      ),
+    );
+  }
+}
+
+class MovieCard extends StatelessWidget {
+  final String image;
+  final String title;
+
+  const MovieCard({super.key, required this.image, required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 200,
+      width: 350,
+      child: Card(
+        clipBehavior: Clip.antiAlias,
+        elevation: 4,
+        child: Stack(
+          alignment: Alignment.bottomCenter,
+          children: [
+            Image.network(image, fit: BoxFit.cover,width: double.infinity,
+              height: double.infinity,),
+            Positioned(bottom: 0, left: 0, right: 0,child: Container(color: Colors.black45, height: 50,),),
+            Text(title, style: TextStyle(color: Colors.white), textAlign: TextAlign.center,),
+          ],
         ),
       ),
     );
